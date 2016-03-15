@@ -1,0 +1,974 @@
+\section{Research Design and Preliminary Results}
+
+\subsection{Aim 1: Enhance multi-spectral tissue classification by incorporating multiple modalities with different spatial resolutions}
+\label{section:Aim1ResearchDesign}
+
+\subsubsection{Research Design for Aim 1 Subtask 1: Tissue classification of large-scale multi-site heterogeneous MR data using fuzzy k-nearest neighbor method}
+\label{section:Aim1Subtask1ResearchDesign}
+
+This study proposes enhancements to automate classification of brain tissues for multi-site degenerative magnetic resonance imaging (MRI) data analysis.
+Processing of large collections of MR images is a key research technique to advance our understanding of the human brain. Previous studies have developed a robust multi-modal tool for automated tissue classification of large-scale data based on expectation maximization (EM) method initialized by group-wise prior probability distributions.
+This study aims to augment the EM-based classification using a non-parametric fuzzy k-Nearest Neighbor (k-NN) classifier that can model the unique anatomical states of each subject in the study of degenerative diseases. The proposed method is applicable to multi-center heterogeneous data analysis.
+
+\paragraph{Significance}
+
+Brain tissue segmentation on structural magnetic resonance imaging (MRI) has received considerable attention; one of the classic neuroimaging challenges is the segmentation of MR images into white matter (WM), grey matter (GM) and cerebrospinal fluid (CSF).
+Volumetric measurements in different brain regions are important in studies on aging and neurodegenerative disorders \cite{vrooman2013auto} like Alzheimer's disease, Schizophrenia and Huntington's Disease (HD).
+
+Given the relevance of brain tissue segmentation, different automated segmentation methods have been proposed over the years. Almost all of these methods rely on a supervised or unsupervised voxel classifier. Supervised methods use manually segmented training data to learn the typical distribution of intensity or appearance features for the tissue classes \cite{Anbeek2005}. Unsupervised methods, particularly those based on expectation maximization (EM), do not require training data and are therefore more widely used than the supervised methods. EM-based methods start with an initial segmentation, which is often based on a probabilistic brain tissue atlas that is registered to the unlabeled target scans, and from this initialization, class-specific Gaussian intensity distributions are estimated. This intensity model can then be used to update the segmentation and this process is repeated until the segmentation converges \cite{vrooman2013auto}.
+
+Kim and Johnson \cite{Kim2013} implemented an iterative optimization framework between bias-correction, registration, and tissue classification using expectation maximization (EM) method for large-scale heterogeneous multi-site longitudinal MR data analysis. In this study, we propose to extend the $EM$-based classification using a non-parametric fuzzy k-Nearest Neighbor (k-NN) classifier that avoids biases inherent in $EM$ use of prior probability distributions that may not represent diseased anatomical states.
+
+\paragraph{Approach} %-----------------------
+
+\subparagraph{General Framework} %-----------------------
+%\newline 
+This study describes the proposed algorithmic enhancements on the implementation of a framework developed by Kim and Johnson \cite{Kim2013} that iteratively incorporates bias-field correction, image registration, and tissue classification. Enhancements applied for more accurate subject specific tissue classification in processing of heterogeneous multi-site degenerative MR data.
+
+Our atlas based framework takes inputs of any combination of modalities with any number of scan repetitions if the input modalities have comparable resolution and voxel sizes. 
+First, using a Rigid-type registration, all intra-subject scans are spatially normalized into a common subject-specific reference orientation defined by anterior commissure (AC), and posterior commissure (PC) landmarks, and mid-saggital plane \cite{Ghayoor13}.
+Then, all intra-modal scan repetitions are averaged together to increase the signal-to-noise ratio for each modality.
+After that, all the atlas priors are placed into the subject space using an atlas to subject transformation that is derived from a high-deformable registration algorithm (SyN) \cite{Avants2008b,avants2009advanced} to enhance the accuracy of the subject-specific tissue priors.
+
+The warped priors in the subject space are tissue probability maps giving the probability of a certain voxel belonging to a certain tissue, and they are used to initialize the Gaussian distribution parameters for the $EM$ algorithm. Finally, the processes of posterior estimation, bias field correction, and the registration are iteratively updated multiple times until convergence.
+
+\subparagraph{New classifier} %-----------------------
+
+A non-parametric subject specific fuzzy $k-NN$ classifier complements the $EM$ estimate of tissues using the information from multi-modal scans. The new classifier takes the output tissue probability maps (TPMs), $P_{c}(x)$, from the $EM$ algorithm, where ``$x$'' represents a voxel location, and ``$c$'' is a single tissue class:
+%--------------------------------
+\begin{equation}
+\begin{gathered}
+\forall x\in \left\{voxel \quad locations\right\}, \\
+\forall c\in \left\{1,\ldots, \mathbb{C}\right\}, \\
+\quad \exists \quad 0 \leq P_c(x) \leq 1 \quad s.t. \quad
+\sum^{\mathbb{C}}_{c=1}P_c(x)=1
+\end{gathered}
+\end{equation}
+%--------------------------------
+Where $\mathbb{C}$ is the total number of tissue types, and $P_{c}(x)$ represent how likely voxel location $x$ belongs to tissue type $c$.
+
+\subparagraph*{Training sample set} %-----------------------
+
+To find the candidate training sample locations ``$t$'' for the $k-NN$ classifier, all $P_c(x)$ from $EM$ posterior $TPM$s are thresholded in order to identify those sample locations that have a sufficient probability to belong to a single tissue type. Increasing the threshold leads to fewer but more reliable tissue samples. A threshold of $0.7$ is chosen based on the results presented by Vrooman \emph{et al.}\cite{Vrooman2007} for brains tissue types.
+%--------------------------------
+\begin{equation}
+t\in \left\{ x\quad \vline \quad \exists c \quad s.t. \quad P_c(x)\geq 0.7\right\}
+\end{equation}
+%--------------------------------
+Where training sample location $t$ is assigned with a label pointing to tissue region $c$.
+
+Chosen training samples are then represented in an $\mathbb{F}$-dimensional feature space with:
+%--------------------------------
+\begin{equation}
+\mathbb{F}=\mathbb{M}+\mathbb{C}
+\end{equation}
+%--------------------------------
+Where $\mathbb{F}$ is the number of features; $\mathbb{M}$ is the number of input multi-modal scans, and $\mathbb{C}$ is the total number of tissue types.
+The feature vector corresponding to the training sample $t$ is created as:
+%--------------------------------
+\begin{equation} \label{eq:fvec}
+\begin{bmatrix}
+I_{1}(t), & ..., & I_{\mathbb{M}}(t), & \breve{P_1}(t), & ..., & \breve{P_{\mathbb{C}}}(t)
+\end{bmatrix}
+\end{equation}
+%--------------------------------
+Where $I_{m}(t)$, $m\in \left\{1,\ldots, \mathbb{M}\right\}$ represents the intensity value of the $m^{th}$ input image scan at sample location $t$, and $\breve{P_c}(t)$, $c\in \left\{1,\ldots, \mathbb{C}\right\}$ is a binary value derived from the $c^{th}$ $EM$ posterior $TPM$ at sample location $t$, such that:
+%--------------------------------
+\begin{equation}
+\breve{P_c}(t) = \left\{\begin{matrix}
+1 & if \quad P_c(t) \geq 0.01 \\ 
+0 & if \quad P_c(t) <  0.01
+\end{matrix}\right.
+\end{equation}
+%--------------------------------
+In fact, our feature space defines all the candidate regions, suggested by $EM$ results, that the current sample location $t$ probably belongs to by more than one percent chance. In this way, the fuzzy $K-NN$ classifier is restricted to only biological plausible results, and it is not biased by the probability values estimated in $EM$ step.
+
+Finally, each created feature vector is added to a \textit{training sample set},
+and its known label code is added to the corresponding row of a \textit{labels vector}.
+
+\subparagraph*{Test sample set} %------------------------
+
+Test sample locations ``$s$'' are the center points of the voxel locations in the first input scan, and for each test location, a feature vector is created as shown in equation (\ref{eq:fvec}). All the test feature vectors are then added to a \textit{test sample set}.
+
+\subparagraph*{Run the algorithm} %-----------------------
+
+The training and test sample sets and the labels vector are passed to a fuzzy $k-NN$ algorithm
+where the following procedure is performed on each test sample location:
+
+\begin{enumerate}
+\item In the feature space, the Euclidean distances between each test sample and all the training samples are computed.
+Distances are calculated through a k-dimensional tree structure \cite{Bentley75} that is a data structure for organizing points in a k-dimensional space using space partitioning.
+
+\item The first $\mathbb{K}$ nearest neighbors are identified from the computed distance vector. $\mathbb{K}$ needs to be an odd number, and it was set to 45 as suggested by Vrooman \emph{et al.} \cite{Vrooman2007} and Cocosco \emph{et al.} \cite{Cocosco2003}.
+
+\item
+New probabilities, $P_c(s)$, are computed for the test location $s$ showing how likely the current test location belongs to each tissue type.
+If $\mathbb{N}$ out of $\mathbb{K}$ nearest neighbors belong to tissue class $c$, then:
+%--------------------------------
+\begin{equation}
+\begin{gathered}
+\forall s\in \left\{test \quad sample \quad locations\right\}, \\
+\forall c\in \left\{1,\ldots, \mathbb{C}\right\}, \\
+P_c(s) = \frac{ \sum_{o=1}^{\mathbb{N}} \frac{1}{d_{c,o}^2} }{ \sum_{i=1}^{\mathbb{K}} \frac{1}{d_{i}^2} }
+\end{gathered}
+\end{equation}
+%--------------------------------
+Where $d_{c,o}$ is the distance of the $o^{th}$ occurrence of class $c$ to the current test location $s$; $d_{i}$ is the distance to the $i^{th}$ neighbor of the current test sample, and $P_c(s)$ represents the probability that the current test location $s$ belongs to class $c$.
+
+\item For the test location $s$, all computed $P_c(s)$, $c\in \left\{1,\ldots, \mathbb{C}\right\}$ are stored in one \textbf{row} of a $\mathbb{S}\times \mathbb{C}$ \textit{likelihood} matrix, where $\mathbb{S}$ is the total number of test locations, and $\mathbb{C}$ is the total number of tissue types:
+%--------------------------------
+\begin{equation}
+\textrm{likelihood matrix} =
+\begin{bmatrix}
+%P_1(1) & ... & P_{\mathbb{C}}(1) \\
+ & & . \\
+ & & . \\
+ & & . \\
+P_1(s), & ..., & P_c(s), & ..., & P_{\mathbb{C}}(s) \\
+ & & . \\
+ & & . \\
+ & & . \\
+%P_1(\mathbb{S}) & ... & P_{\mathbb{C}}(\mathbb{S})
+\end{bmatrix}_{\mathbb{S}\times \mathbb{C}}
+\end{equation}
+%--------------------------------
+
+\item Finally, new tissue probability maps are created by rearranging each \textbf{column} of the likelihood matrix to an output probability image. There are $\mathbb{C}$ output probability maps corresponding to all interested tissue types.
+\end{enumerate}
+
+\paragraph{Evaluation and Results} %-----------------
+
+The accuracy and effectiveness of the proposed method is evaluated qualitatively and quantitatively.
+
+\subparagraph{Data} %-----------------
+\label{brainWebData}
+
+A set of $18$ synthetic MR datasets of a brain subject from BrainWeb database \cite{Cocosco1997} are used for quantitative evaluation of the proposed enhancements.
+The BrainWeb database provides a rich set of multi-spectral data as \textit{input sources} to our algorithm that include both $T1$ and $T2$ modality scans. BrainWeb also provides a simulation of the heterogeneous nature of the multi-site real data with input variants that represent six levels of noise and three degrees of bias-field for each $T1$ and $T2$. 
+Finally, the BrainWeb data provides a set of tissue segmentation \textit{baselines} for comparison against each \textit{output result} from our algorithm.
+
+\subparagraph{Qualitative Evaluation} %-----------------
+
+3D Slicer \cite{slicer_paper} was used to visually compare the segmentation results of the proposed enhancements to the technique established by Kim and Johnson \cite{Kim2013}. 
+Qualitative investigation was done using a sample $T1$-weighted MR scan that was arbitrarily selected from our local University of Iowa SIEMENS Trio Tim $3$ Tesla scan protocol.  This protocol was used as part of the multi-site international PREDICT-HD \cite{PREDICTHD} project.
+
+\subparagraph{Quantitative Evaluation} %-----------------
+
+Proposed enhancements were evaluated quantitatively using BrainWeb database described in section \ref{brainWebData}.
+
+The accuracy and robustness of the proposed enhancements by a fuzzy $k-NN$ algorithm were compared to the reported results by Kim and Johnson \cite{Kim2013} derived from an $EM$-based only classification. For this purpose, the similarity of both methods were compared against the segmentation baseline provided by BrainWeb along with the evaluation datasets.
+
+Our atlas based approach uses the atlas definitions from two $T1$ and $T2$ modalities with priors for $15$ discrete region-specific tissue types listed in table \ref{tab:tissue_names}. This is a slightly simplified approach to that taken in \cite{Kim2013} where $17$ regions were identified with the Basal region being subdivided into (Caudate, Putamen, Accumben) regions.
+%--------------------------------
+\begin{table}
+\centering
+\caption{Atlas definition of 15 region-specific intensity-context priors. Each tissue type is sub-divided into regions of interest with given names. (Gm = Grey matter, Wm = white matter, Csf = cerebrospinal fluid, Crbl = Cerebellum, Vb = venous blood) }
+\begin{tabular}{c|l}
+\hline \hline
+Tissue & Name \\
+\hline
+Grey matter & Basal \\
+ & Hippocampus \\
+ & Crbl Gm \\
+ & Surf Gm \\ [0.6ex]
+White matter & Wm \\
+ & Crbl Wm \\ [0.6ex]
+Csf & Csf \\ [0.6ex]
+Wm \& Gm & Thalamus \\
+ & Globus \\ [0.6ex]
+Venous blood & Vb \\ [0.6ex]
+Background & Not Gm \\
+  & Not Wm \\
+  & Not Csf \\
+  & Not Vb \\
+  & Air \\
+\hline \hline
+\end{tabular}
+\label{tab:tissue_names}
+\end{table}
+%--------------------------------
+
+The software is implemented based on the $InsightToolkit$ libraries \cite{johnson2015itk1, johnson2015itk2} and conforms to the coding style, testing, and software guidelines identified by the National Alliance for Medical Image Computing (NAMIC) group. Our implementation is publicly available via BRAINSTools package \cite{BRAINSTools} and contributes to a fully automated processing pipeline for MR images \cite{Kim2014,Pierson2011}.
+
+\subparagraph{Results} %-----------------
+
+Figure \ref{useKNN_qualitative} shows the visual comparison of the results on a sample MR scan from the PREDICT-HD study. As shown by corresponding arrows in both images, the segmentation boundaries of GM, WM and CSF from our proposed approach (using $K-NN$) (Fig. \ref{useKNN_qualitative}(b)) are more agreeable to real anatomical tissue boundaries than the results derived from $EM$-based only classification (Fig. \ref{useKNN_qualitative}(a)).
+
+In  order  to  compare  the  quantitative  results, two independent measures, ``Dice index'' and ``average Hausdorff distance \cite{Dubuisson1994}'', are reported to compare the results of the automated delineations against the ground truth. Figure \ref{kNN_vs_EM} shows the Dice index (larger is better) and average Hausdorff distance (smaller is better) evaluated along three degrees of bias-field ($rf=0\%$, $rf=20\%$ and $rf=40\%$) and $six$ levels of noise ($0\%$, $1\%$, $3\%$, $5\%$, $7\%$, and $9\%$) for three tissue types (WM, GM and CSF). The results of $EM$ method are shown in $black$ while the $blue$ color is used for the results of proposed enhancements using a $k-NN$ classification.
+
+\begin{figure}
+\centering
+\includegraphics[width=6.75in,height=3.3in]{useKNN_qualitative}\
+\centering
+\caption{Visual comparison of segmentation results on a sample PREDICT-HD MR data between (a) $EM$ only based classification and (b) proposed enhancements using a fuzzy $k-NN$ classifier. More accurate delineation is achieved by the proposed approach.}
+\label{useKNN_qualitative}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=6.75in,height=5.5in]{kNN_vs_EM}\
+\centering
+\caption{Comparison of the classification of cerebrospinal fluid (CSF), Grey matter (GM) and White matter (WM) tissues between $EM$ only based classification (black) and the extended method by a fuzzy $k-NN$ classifier (blue) using two independent measures, Dice index (larger is better) and average Hausdorff distance (smaller is better) . The evaluation is performed along three degrees of bias-field (rf=0, rf=20 and rf=40) and six levels of noise ($0\%$, $1\%$, $3\%$, $5\%$, $7\%$, and $9\%$) along x-axis. Both similarity measures show improvement on the results of the proposed $k-NN$ enhancements.}
+\label{kNN_vs_EM}
+\end{figure}
+
+\paragraph{Discussion and Conclusions} %-----------------
+
+This work improved automated classification of brain tissues for multi-center $3D$ MRI data analysis. Previous studies have used expectation maximization (EM) based classification that is group specific and uses a \emph{priori} knowledge for all the subjects in an atlas based approach.
+This paper, however, emphasized the importance of a non-parametric model's utility in neurodegenerative diseases, since each subject has unique anatomical states in longitudinal degenerative studies that may not be represented by prior probability distributions. Enhancements were suggested by augmenting the $EM$-based classification using a fuzzy k-nearest neighbor (k-NN) classifier that builds up a model for each individual subject and complements the classification results that $EM$ produces.
+A Fuzzy $k-NN$ method was selected, as this non-parametric classifier is subject specific; it is not biased by prior probability distributions, and it potentially can model more complex decision boundaries than a Gaussian distribution based mixture method.
+
+The proposed implementation generates more precise results than $EM$ only classification, since both similarity measures, Dice index and the average Hausdorff distance, show improvement on the results of $k-NN$ classifier as demonstrated in Figure \ref{kNN_vs_EM}.
+Also, qualitative observations in Figure \ref{useKNN_qualitative} show that our method especially provides more accuracy in delineation of sophisticated tissue boundaries where tissue regions are highly interleaved together like GM and WM boundaries.
+\newline
+
+\subsubsection{Research Design for Aim 1 Subtask 2: Enhance multi-modal classification when complementary information comes from a second modality with lower spatial resolution}
+\label{section:Aim1Subtask2ResearchDesign} %--------------------
+
+Previous subtask suggested enhancements when both $T1$/$T2$-weighted $MR$ modalities were acquired at the same high spatial resolution with isotropic $1$ $mm^{3}$ voxel sizes. However, many real world data are collected such that $T2$ image is acquired in lower spatial resolution than $T1$ (usually by a factor of $2$ to $3$). This is especially the case in datasets provided from scanners with $1.5$ Tesla scan protocol.
+
+The enhanced multi-modal classification framework in section \ref{section:Aim1Subtask1ResearchDesign} operates in voxel lattice space. It would not cause any problem if always all input modality scans were provided at the same voxel space. However, now we need to enhance the previous infrastructure to run in physical space before we investigate the segmentation results in the case that input modality scans are not in the same resolution and their voxel lattices do not line up.
+
+In this section, first we enhance the presented multi-modal classification framework to run in physical space, and we demonstrate that the system is upgraded successfully by generating equivalent results in single-modal mode. 
+Then, we show that na\"{i}vely adding the information of a second modality with lower spatial resolution can worsen the segmentation results. We investigate and explain the reason by describing partial volume effects (PVE). Finally, we propose a novel approach to deal with PVE issue and evaluate the proposed method.
+
+\paragraph{Enhance classification framework to run in physical space} %--------------------
+
+In a multi-modal classification framework different modalities may have different resolutions. To avoid interpolation error and introducing artificial partial volume effects, it is important to perform classification in physical space. In this step, classification framework is enhanced to perform in physical space.
+
+\subparagraph{Evaluation}
+Only T1 modality is used to evaluate the performance of new framework. By using only one modality, we expect to get the same results when classification was run in physical space vs. voxel space. Again BrainWeb dataset as described in section \ref{brainWebData} was used to evaluate the classification performance quantitatively.
+
+\subparagraph{Results}
+
+
+
+
+
+
+\paragraph{Significance}
+
+It is well established that multi-modal MR images can provide complementary information that can improve brain tissue classification \cite{Kim2013}.
+
+\paragraph{Approach}
+
+\paragraph{Experiments and Results}
+
+\paragraph{Discussion and Conclusions}
+
+\subsubsection{Research Design for Aim 1 Subtask 3: Extract geometric mean of diffusion images from DWI data, and use these low-resolution information for further enhancement of tissue classification}
+\label{section:Aim1Subtask3ResearchDesign} %--------------------
+
+\paragraph{Significance}
+
+\paragraph{Approach}
+
+\paragraph{Evaluation and Expected Results}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage % deleteme
+%===============================================================
+%===============================================================
+%===============================================================
+\subsection{Aim 2: Super-resolution reconstruction of low-resolution diffusion-weighted imaging data using a \emph{priori} knowledge of underlying anatomical structure}
+\label{subsection:Aim2ResearchDesign}
+
+\subsubsection{Significance}
+
+Diffusion-weighted imaging (DWI) is a key imaging modality that enables non-invasive and in-vivo investigation and characterization of brain white matter architecture and microstructure and is widely applied in neurological applications.
+
+DWI is, however, strongly limited by its relatively low spatial resolution. The resolution of current typical DWI data is $2 \times 2 \times 2$  $mm^3$, that means its voxel is $8$ times larger than that in structural MRI. 
+Increasing the resolution of DWI acquisitions can allow investigation of novel fiber structures and will enable a more accurate assessment of the brain connectivity by tracing small white matter fiber bundles. Also, high resolution images are critical to reduce partial volume effects. 
+However, increasing the resolution is challenging in DWI. A DWI scan needs to be repeated 64 times for averaging to increase the resolution from $2 \times 2 \times 2$ $mm^3$ to $1 \times 1 \times 1$ $mm^3$ while keeping the similar signal-to-noise ratio \cite{brown2014}. It means that 5 minute acquisition would become a 5 hour scan, which is not feasible. 
+
+To enhance the resolution, image post-processing methods are an alternative to hardware improvement.
+However, simply using the interpolation methods to increase the resolution causes results show blurry edges.
+The term of super-resolution reconstruction (SRR) refers to considering image degradation process to estimate the latent high resolution image from the input low resolution.
+
+%There are only few studies on SRR methods for DWI. 
+To overcome the limitations of low-resolution DWI, some SRR methods have been recently developed.
+%Existing techniques can be classified into two general categories based on their data acquisition techniques. The first
+One group of methods require multiple low-resolution (LR) images to reconstruct a high-resolution (HR) image.
+%
+Scherrer \emph{et al.} \cite{scherrer2012} suggested to acquire multiple anisotropic orthogonal DWI scans and fuse them into a high resolution output.
+%
+Ning \emph{et al.} \cite{ning2015} combined the concept of compressed sensing and classical super-resolution to reconstruct high-resolution DWI from multiple sub-pixel-shifted thick-slice LR acquisitions with non-overlapping diffusion directions to reduce acquisition time.
+%
+However, these types of methods are hampered for general applications because: first, a specially designed image acquisition method is needed to acquire multiple scans; second, the subject motion and eddy current effects in different scans could largely affect the final results.
+%
+The other group of methods obtain HR data using a single LR image through a learning process or an intelligent regularization.
+%
+Alexander \emph{et al.} \cite{alexander2014} proposed a method to exploit information from expensive high quality datasets and transfer them to enhance the images acquired from a more modest data acquisition. Their method attempts to learn mapping from LR to HR through training sets using patch-based image representation and random forest regression. Tarquino \emph{et al.} \cite{tarquino2014} suggested a patch-based sparse representation approach to recover HR reconstruction using the coupled low and high resolution dictionaries. Although these methods do not require multiple LR acquisition, they still need a separate HR training dataset.
+% for Alexander et al:
+% - In their method they have proposed to exploit information in expensive high quality data sets to improve images reconstructed from more modest data acquisitions (In this aspect it is kind of similar to my work). However, in following aspects it is different than my method:
+% - Their method attempts to learn mapping from low resolution to high resolution through training sets using patch-based image representation and random forest regression. In their implementation, they have used randomly selected high resolution DWI data from Human Connectome Porject (HCP) as the training data set. In fact, their method does not use multi modal information but needs a separate training data set.
+% - Also, their implementation presented to operate directly on Diffusion Tensor Images (DTI) rather than raw DWI data.
+Shi \emph{et al.} \cite{shi2015} proposed a method for super-resolution reconstruction of a single LR scan by modeling degradation process and use of different regularization terms. However, the performance of their method still largely relies on the information contained in the original LR image.
+
+Here, we propose a novel method for super-resolution reconstruction of input DWI image using the prior anatomical information extracted from other modality sources provided in higher spatial resolution.
+Particularly, we incorporate the brain anatomy description provided by high-resolution structural MR (T1/T2-wighted) scans into super-resolution reconstruction of DWI image.
+Our method aims to increase the resolution of the input low-resolution DWI to a high-resolution DWI, e.g., at a factor of 2. Our contribution is two fold: 1) Create a combined edge map from the structural MR scans in higher spatial resolution ($1 \times 1 \times 1$ $mm^3$); 2) Use the created edge map as discrete spatial weights in a weighted total variation (WTV) method.
+\newline
+
+\subsubsection{Mathematical Background} %----------------
+
+\paragraph{Regularized recovery of inverse problems} %-----------
+
+Image reconstruction is the process of the recovery of an ideal intensity image from its corrupted or indirect measurements. Such a process is considered as an inverse problem in science as it starts with the results (observations) and then calculates the causes. The observed data are usually related to the ideal, unknown image through a ``forward'' transformation \cite{geman95}.
+
+We consider the recovery of a continuously differentiable image $f:\Omega \rightarrow \mathbb{R}$ from its measurements $b$. Here, $\Omega \subset \left \{ \mathbb{R}^{n} \mid n = 2 \quad or \quad 3 \right \}$ is the spatial support of the image. The acquisition scheme is modeled by the linear operator $\mathcal{A}$, i.e.,
+
+\begin{equation}
+\begin{gathered}
+b = \mathcal{A}(f) + n
+\end{gathered}
+\end{equation}
+
+Where $n$ is assumed to be a Gaussian distributed white noise with standard deviation of $\sigma$.
+
+The recovery is ill posed in many practical applications as the operator $\mathcal{A}$ is ill conditioned. One popular approach is to add a regularization penalty to the inverse problem.
+Regularization is a method for adding constrains, from some a \emph{priori} information or assumption about the structure of $f$, in addition to those implicit in coherence to the data.
+By formulating the minimization problem using Lagrange multipliers:
+
+\begin{equation}
+\label{eq:nonweightedregularization}
+\begin{gathered}
+\widehat{f} = arg\min_{f}\left\|\mathcal{A}(f)-b\right\|^{2} + \lambda\mathcal{J}(f)
+\end{gathered}
+\end{equation}
+
+%\mathscr{F}
+
+Where the first term ensures fidelity to the data, and the second term imposes a roughness regularization penalty $\mathcal{J}$ that is a convex functional of f.
+The optimal parameter $\lambda$ is a positive parameter that balances theses two terms and is chosen such that $\left\|\mathcal{A}(\hat{f})-b\right\|^{2} \approx \sigma^{2}$.
+
+One popular choice for the regularization term includes quadratic penalties \cite{tikhonov1943stability} that is the squared $l_{2}$ norm of either the image $f$ or its (discrete) derivatives:
+
+\begin{equation}
+\begin{gathered}
+\mathcal{J}(f) = \left\|\triangledown f\right\|^{2} = \int_{\Omega} |\triangledown f|^2 d\Omega
+\end{gathered}
+\end{equation}
+
+Above penalty term is well-known as Tikhonov regularization \cite{tikhonov1977solutions}. By using a quadratic regularization term, the estimator $\widehat{f}$ becomes a linear combination of the data values that provides computational advantages. However, quadratic estimators suffer from oversmoothing of the recovered image, as they and do not recover the important attributes of $f$, such as the location and magnitude of jumps, or higher order discontinuities \cite{geman95}. To show this, consider $1-D$ computation on step edges.
+
+\subparagraph{1-D computation on step edges} %----------------
+Set $\Omega = [-1,1]$, and $f$ the step edge function:
+
+\begin{equation}
+\begin{gathered}
+f(x) = 
+\left \{
+  \begin{tabular}{cc}
+  0 & x $\leq$ 0 \\
+  a & x $>$ 0
+  \end{tabular}
+\right.
+\end{gathered}
+\end{equation}
+
+Where $a$ is a real number. Then, the regularization penalty can be written as:
+
+\begin{equation}
+\begin{gathered}
+\mathcal{J}(f) = \int_{-1}^{1} \left | {f}'(x) \right |^{2}dx
+\end{gathered}
+\end{equation}
+
+Although this $f$ is not differentiable at 0, we try to compute the above penalty by approximating ${f}'(x)$ around 0:
+
+\begin{equation}
+\begin{gathered}
+{f}'(x) \approx \frac{f(h)-f(-h)}{2h} \approx \frac{a}{2h} \\
+\quad s.t. \quad x\in [h,-h] \quad and \quad h>0, small
+\end{gathered}
+\end{equation}
+
+Then:
+
+\begin{equation}
+\begin{gathered}
+\int_{-1}^{1} \left | {f}'(x) \right |^{2}dx = \int_{-1}^{-h} \left | {f}'(x) \right |^{2}dx + \int_{-h}^{h} \left | {f}'(x) \right |^{2}dx + \int_{h}^{1} \left | {f}'(x) \right |^{2}dx \\
+\approx 0 + 2h \times (\frac{a}{2h})^{2} + 0 \approx \frac{a^2}{2h} \rightarrow \infty, h \rightarrow 0
+\end{gathered}
+\end{equation}
+
+Therefore, a step-edge is severely penalized as it has infinite energy and cannot minimize the Tikhonov regularization. Now replace the square in previous computations by $p>0$:
+
+\begin{equation}
+\label{eq:plessthan1}
+\begin{gathered}
+\int_{-1}^{1} \left | {f}'(x) \right |^{p}dx \\
+\approx 0 + 2h \times |\frac{a}{2h}|^{p} + 0 \approx |a|^{p}(2h)^{1-p} < \infty, \quad when \quad p \leq 1
+\end{gathered}
+\end{equation}
+
+Equation (\ref{eq:plessthan1}) shows that the regularization term is finite when $p \leq 1$, so edges are less penalized. Note that when $p=1$, this is the ``Total Variation'' of $f$ \cite{rudin1992nonlinear} where the penalty is the $l_{1}$ norm of the gradient magnitude of the signal, i.e.,
+
+\begin{equation}
+\begin{gathered}
+\mathcal{J}_{TV}(f) = \int_{\Omega} |\triangledown f| d\Omega
+\end{gathered}
+\end{equation}
+
+The concept of using total variation in image processing was first introduced by Rudin \emph{et al.} \cite{rudin1992nonlinear} for noise removal, since it is very effective at simultaneously preserving edges while smoothing noise in flat regions. In addition, total variation (TV) minimization is widely used for reconstruction of images with sparse gradients that specially makes sense as many natural images have sparse or nearly sparse gradients \cite{blomgren1998color}.
+
+Generally, constrained $l_{1}$ minimization methods are well-known for reconstruction of sparse signals from highly incomplete sets of linear measurements \cite{candes2008enhancing}.
+
+\paragraph{$l_{1}$-norm minimization in sparse signal recovery}
+\label{section:l1minsection}
+
+One of the challenging problems in engineering is to reconstruct the sparse signals, since there are fewer equations than unknowns. Under the sparsity assumption, when the equations are linear, we want to recover a signal $x_{0}\in \mathbb{R}^{n}$ by solving:
+
+\begin{equation}
+\label{eq:l0norm}
+\begin{gathered}
+\min_{x\in \mathbb{R}^{n}}\left\|\Phi x-y\right\|^{2} + \lambda \left \|x  \right \|_{l_{0}}
+\end{gathered}
+\end{equation}
+
+Where $\Phi$ is an $m \times n$ matrix with fewer rows than columns ($m<n$), and $\left \| x \right \|_{l_{0}}=\left | \left \{ i:x_{i} \neq 0 \right \} \right |$; i.e., number of nonzero samples in $x$.
+
+However, the equation in (\ref{eq:l0norm}) is nonconvex, and a common alternative is to consider the following convex problem:
+
+\begin{equation}
+\label{eq:l1norm}
+\begin{gathered}
+\min_{x\in \mathbb{R}^{n}}\left\|\Phi x-y\right\|^{2} + \lambda \left \|x  \right \|_{l_{1}}
+\end{gathered}
+\end{equation}
+
+Where $\left \| x \right \|_{l_{1}}=\sum_{i=1}^{n}\left | x_{_{i}} \right |$. In equation (\ref{eq:l1norm}), $l_{1}$ norm is used as a poxy for the $l_{0}$ sparsity count.
+
+Like $l_{0}$, the $l_{1}$ regularization term has an advantage over quadratic penalty functions as it preserves jumps in the function. However, a key difference between the $l_{1}$ and the $l_{0}$ norm is the dependence on magnitude, such that larger coefficients are penalized more heavily in the $l_{1}$ norm than smaller coefficients. To address this imbalance, Candes \emph{et al.} have suggested a weighted formulation of $l_{1}$ minimization to more democratically penalize nonzero coefficients \cite{candes2008enhancing}:
+
+\begin{equation}
+\label{eq:weightedl1norm}
+\begin{gathered}
+\min_{x\in \mathbb{R}^{n}}\left\|\Phi x-y\right\|^{2} + \lambda \left \|Wx  \right \|_{l_{1}}
+\end{gathered}
+\end{equation}
+
+Where $\left \| Wx \right \|_{l_{1}}=\sum_{i=1}^{n}w_{i}\left | x_{_{i}} \right |$, and each $w_{i}$ is a positive weight.
+
+In general, weighted and unweighted $l_{1}$ minimization have different solutions, since weights can be considered as free parameters in the convex problem, whose values ``can'' improve the signal reconstruction if they are set wisely.
+
+\subparagraph*{What values for the weights will improve signal reconstruction?}
+As a rough rule of thumb, weights should be chosen such that they counteract the influence of the signal magnitude on the $l_{1}$ penalty function. Suppose we know the true signal $x_{0}$; then, the weights can be inversely proportional to the true signal magnitude such that:
+
+\begin{equation}
+\label{eq:idealweights}
+\begin{gathered}
+w_{i} = \left\{\begin{matrix}
+\frac{1}{\left | x_{0,i} \right |} , & x_{0,i} \neq 0 , \\ 
+\infty , &  x_{0,i} = 0.
+\end{matrix}\right.
+\end{gathered}
+\end{equation}
+
+Ideally, zero-valued components of $x_{0}$ are prohibited in the recovered signal being penalized by large (infinite) entries of $w_{i}$, while the largest signal coefficients are encouraged to be identified as nonzero in the recovered signal being penalized less by small (finite) $w_{i}$ entries. It is of course impossible to construct the precise weights without knowing the true signal $x_{0}$, so a valid set of weights can be designed based on an approximation $\hat{x_{0}}$ to $x_{0}$. Also, To provide stability, the equation (\ref{eq:idealweights}) is rewritten as following by introducing the parameter $\epsilon > 0$:
+
+\begin{equation}
+\label{eq:weights}
+\begin{gathered}
+w_{i} = \frac{1}{\left | \hat{x_{0,i}} \right | + \epsilon } , \quad \epsilon > 0
+\end{gathered}
+\end{equation}
+
+Where $\epsilon$ should be set slightly smaller than the expected nonzero magnitudes of $\hat{x_{0}}$ \cite{candes2008enhancing}. In addition to stability, using $\epsilon$ ensures that a zero-valued entry in approximated $\hat{x_{0}}$ does not strictly prohibit a nonzero estimate in the recovered signal.
+
+Using above weights in minimization problem (\ref{eq:weightedl1norm}) makes the solution $x$ to concentrate on the large nonzero entries in $x_{0}$ since they will be penalized less by small $w_{i}$ entries, while zero-valued entries on $x_{0}$ will be largely penalized and are discouraged in the recovered signal.
+
+\paragraph{Analytical justification} %------------------------
+\label{subsubsection:analyticalJustification}
+
+Using a concave penalty function, instead of the $l_1$-norm regularization term in equation (\ref{eq:l1norm}), more closely resembles the $l_0$-norm regularization. It is illustrated in figure (\ref{concave_penalty_function}), where the $f_{log,\epsilon}(t)$ is defined as:
+
+\begin{equation}
+\label{eq:concaveFunction}
+\begin{gathered}
+f_{log,\epsilon}(t) = log(1+\frac{\left | t \right |}{\epsilon })
+\end{gathered}
+\end{equation}
+
+Like the $l_0$ norm, the $f_{log,\epsilon}(t)$ allows a relatively large penalty to be placed on small nonzero coefficients. In fact, $f_{log,\epsilon}(t)$ tends to $f_0(t)$ as $\epsilon \rightarrow 0$.
+
+%--------------------------------
+\begin{figure}
+\centering
+\includegraphics[width=3.5in,height=1.75in]{concave_penalty_function}\
+\centering
+\caption{The log-sum concave penalty function $f_{log,\epsilon}(t)$ is a better approximation for the $l_0$ sparsity count $f_0(t)$ rather than the traditional convex $l_1$ regularization $f_1(t)$ \cite{candes2008enhancing}.}
+\label{concave_penalty_function}
+\end{figure}
+%--------------------------------
+
+In this section, we show that using a weighted $l_{1}$ minimization of as weights defined in (\ref{eq:weights}) is like to find the local minimum of a concave penalty function as defined in (\ref{eq:concaveFunction}). 
+
+To establish this connection, consider the following problem:
+
+\begin{equation}
+\begin{gathered}
+\min_{x\in \mathbb{R}^{n}}\left\|\Phi x-y\right\|^{2} + \lambda \sum_{i=1}^{n} log(1+\frac{\left | x_{i} \right |}{\epsilon })
+\end{gathered}
+\end{equation}
+
+Which is equivalent to 
+
+\begin{equation}
+\label{eq:log}
+\begin{gathered}
+\min_{x\in \mathbb{R}^{n}} 
+\sum_{i=1}^{n} log(1+\frac{\left | x_{i} \right |}{\epsilon })
+\quad subject \quad to \quad y=\Phi x
+\end{gathered}
+\end{equation}
+
+Above optimization problem can be solved using a majorize-minimize (MM) \cite{hunter2004} framework by iteratively minimizing a simple surrogate function majorizing a given objective function, so (\ref{eq:log}) is equivalent to:
+
+\begin{equation}
+\label{eq:logsurrogate}
+\begin{gathered}
+\min_{x,u\in \mathbb{R}^{n}} 
+\sum_{i=1}^{n} log(1+\frac{u_{i}}{\epsilon })
+\quad subject \quad to \quad \begin{matrix}
+y=\Phi x,\\
+\left | x_{i} \right | \leq u_{i}, i=1,..,n. 
+\end{matrix}
+\end{gathered}
+\end{equation}
+
+If $\hat{x}$ is a solution to (\ref{eq:log}), then $(\hat{x},\left | \hat{x}  \right |)$ is a solution to (\ref{eq:logsurrogate}). Also, conversely, if $(\hat{x},\hat{u})$ is a solution to (\ref{eq:logsurrogate}), then $\hat{x}$ is a solution to (\ref{eq:log}). Now, set:
+
+\begin{equation}
+\label{eq:funcg}
+\begin{gathered}
+g\left ( u \right ) =
+\sum_{i=1}^{n} log(1+\frac{u_{i}}{\epsilon })
+\end{gathered}
+\end{equation}
+
+Function $g$ is concave and below its tangent, so it can be minimized by iteratively improving on an initial guess $u^{\left ( 0 \right )}$.
+At each iteration, we minimize a linear approximation of $g$ around the previous guess $u^{\left ( l \right )}$ derived from the first-order Taylor polynomial:
+
+\begin{equation}
+\begin{gathered}
+u^{\left ( l+1 \right )} = arg \min\left \{ g\left ( u^{\left ( l \right )} \right ) + \bigtriangledown g\left ( u^{\left ( l \right )} \right ).\left ( u-u^{\left ( l \right )} \right ) \right \} 
+\quad subject \quad to \quad u\in \mathcal{C}
+\end{gathered}
+\end{equation}
+
+Where $\mathcal{C}$ is a convex set. Each iteration of above problem is a convex optimization problem, since it is minimization of a linearization of $g$ around previous guess:
+
+\begin{equation}
+\begin{gathered}
+u^{\left ( l+1 \right )} = arg \min \bigtriangledown g\left ( u^{\left ( l \right )} \right ).u
+\quad subject \quad to \quad u\in \mathcal{C}
+\end{gathered}
+\end{equation}
+
+In the case of optimization problem in (\ref{eq:logsurrogate}), this gives:
+
+\begin{equation}
+\begin{gathered}
+\left ( x^{\left ( l+1 \right )}, u^{\left ( l+1 \right )} \right ) =
+arg \min \sum_{i=1}^{n}\frac{u_{i}}{u_{i}^{\left ( l \right )}+\epsilon }
+\quad subject \quad to \quad \begin{matrix}
+y=\Phi x,\\
+\left | x_{i} \right | \leq u_{i}, i=1,..,n. 
+\end{matrix}
+\end{gathered}
+\end{equation}
+
+Which is equivalent to:
+
+\begin{equation}
+\label{eq:mmsolution}
+\begin{gathered}
+ x^{\left ( l+1 \right )} = arg \min \sum_{i=1}^{n} \frac{\left | x_{i} \right |}{\left | x_{i}^{\left ( l \right )} \right |+\epsilon }
+\quad subject \quad to \quad y=\Phi x
+\end{gathered}
+\end{equation}
+
+By setting:
+
+\begin{equation}
+\begin{gathered}
+W_{i}^{\left ( l+1 \right )}  = \frac{1}{\left | x_{i}^{\left ( l \right )} \right |+\epsilon }
+\end{gathered}
+\end{equation}
+
+Then (\ref{eq:mmsolution}) can be rewritten as:
+
+\begin{equation}
+\begin{gathered}
+x^{\left ( l+1 \right )} = arg \min \sum_{i=1}^{n} W_{i}^{\left ( l+1 \right )} \left | x_{i} \right |
+\quad subject \quad to \quad y=\Phi x
+\end{gathered}
+\end{equation}
+
+That is equivalent to:
+
+\begin{equation}
+\begin{gathered}
+x^{\left ( l+1 \right )} = arg \min \left \| \Phi x-y \right \|^{2} + \lambda \left \| W^{\left ( l+1 \right )} x \right \|_{l_{1}}
+\end{gathered}
+\end{equation}
+
+Above is an iterative reweighted $l_{1}$ minimization approach suggested by Candes \emph{et al.} \cite{candes2008enhancing}, in which, each iteration of the algorithm solves a convex optimization problem, whereas the overall algorithm finds a local minimum of a concave penalty function.
+
+If we suppose weights are pre-specified by a ``true knowledge'' of signal $x_{0}$; then, only one iteration of above algorithm would be enough:
+
+\begin{equation}
+\label{eq:firstWeightingSolution}
+\begin{gathered}
+\hat{x_{0}} = arg \min \left \| \Phi x-y \right \|^{2} + \lambda \left \| Wx \right \|_{l_{1}}, \\
+\quad where \quad W = \frac{1}{\left | x_{0} \right |+\epsilon }
+\end{gathered}
+\end{equation}
+
+\paragraph{Variation of weights} %----------------------------
+
+Non-convex regularization terms give reconstruction with less blurring than convex metrics \cite{yang2013}. As shown in section \ref{subsubsection:analyticalJustification}, using pre-specified weights in a weighted $l_1$ minimization is like to find the local minimum of a concave penalty function that is a better approximation of the $l_0$ norm (see Figure (\ref{concave_penalty_function})).
+
+Depending on selected concave function, there are a variety of possible weighting functions in place of $W$ as defined in (\ref{eq:firstWeightingSolution}). For example if instead of a log-sum penalty function, as defined in (\ref{eq:funcg}), we consider an arctangent concave function:
+
+\begin{equation}
+\label{eq:atan}
+\begin{gathered}
+g\left ( u \right ) =
+\sum_{i=1}^{n} atan(\frac{u_{i}}{\epsilon })
+\end{gathered}
+\end{equation}
+
+We can find an alternative formulation of the spatial weights by following the same procedure described in section \ref{subsubsection:analyticalJustification}:
+
+\begin{equation}
+\label{eq:newWeights}
+\begin{gathered}
+W = \frac{1}{ x_{0}^{2}+\epsilon^{2} }
+\end{gathered}
+\end{equation}
+
+The choice of different variations of the weighting function can be the subject of further empirical studies. The preliminary results of this study are provided based on the choice of weighting function as defined in (\ref{eq:firstWeightingSolution}).
+\newline
+
+\subsubsection{Approach}
+
+\paragraph{Weighted total variation minimization for image reconstruction}
+
+To achieve equation (\ref{eq:firstWeightingSolution}), we supposed that we have a true knowledge of signal $x_{0}$. Surprisingly it can be a valid assumption in medical imaging since we may have different representation of the current subject image through different modality sources where the other modality scans may provide a better estimate of some anatomical features that we wish to recover in the current subject image.
+
+The weighted $l_{1}$ minimization concept introduced in section (\ref{section:l1minsection}) can also enhance the performance of total-variation (TV) minimization in image reconstruction since TV can be considered as an $l_{1}$ minimization problem. Weighted-TV problem can then be presented as:
+
+\begin{equation}
+\label{eq:weightedregularization}
+\begin{gathered}
+\widehat{f} = arg\min_{f}\left\|\mathcal{A}(f)-b\right\|^{2} + \lambda \left \| W \left | \bigtriangledown f \right | \right \|_{l_{1}}, \\
+\quad where \quad W = \frac{1}{\left | \bigtriangledown \widehat{f_{0}} \right |+\epsilon }
+\end{gathered}
+\end{equation}
+
+Where $\left | \bigtriangledown \widehat{f_{0}} \right |$ is an edge map estimated from the high resolution representation of the input subject image in other modality scans. Then, spatial weights are constructed from the estimated edge map as an prior image.
+
+Weights are inversely proportional to the estimation of the gradient magnitude of the input image, such that the most strong edges get the lowest weight values close to zero, and weak edges get higher weights. The maximum weight value is assigned to the smooth regions with no edges.
+
+Some methods have been developed for accurate estimation of the spatial weights. 
+Candes \emph{et al.} \cite{candes2008enhancing} suggested an iterative framework to estimate the weights iteratively from the gradient magnitude of the input low-resolution image. First, all weights are set to one; then, at each iteration weights are updated based on the gradient magnitude of the estimated high-resolution image in previous iteration.
+Jacob and Angie \cite{ongie2015} suggested to expand the theory of sampling signals of finite rate of innovation (FRI) on the input low-resolution image to estimate a resolution-independent mask whose zeros represent the edges of the image; then, the spatial weights are created by discretizing the estimated mask at desired resolution.
+
+Here, we propose to create the spatial weights based on a high-resolution edge map estimated from equivalent representation of the underlying anatomical structures in other modality sources.
+%Here, we propose to create the spatial weights from an high-resolution edge map estimated from the anatomy description provided by high-resolution representation of the input subject image in other modality sources.
+Following section describes the suggested multimodal framework to estimate a combined edge map from different modality scans provided in higher spatial resolution. Then, spatial weights are constructed from the estimated map using the equation (\ref{eq:weightedregularization}).
+
+\paragraph{Construction of weights from the estimated anatomical edge map}
+\label{section:estimateLabelMap}
+
+Here we describe a multimodal framework to estimate a combined edge map from different modality scans that are equivalent representations of a same underlying anatomical structure. Once the edge map is estimated, the spatial weights are created to be inversely proportional to the edge values.
+
+Assume $I_{i}, i\in \left \{ 1,...,N \right \}$ are different modality scans all representing a single subject image. The gradient of each image is defined as:
+
+\begin{equation}
+\label{eq:gradient}
+\begin{gathered}
+\forall x=(x_{1}, ..., x_{n})\in \left\{voxel \quad locations\right\}, \\
+g_{i}(x) = \triangledown I_{i}(x) = \begin{bmatrix}
+\frac{\partial I_{i}}{\partial x_{1}}(x_{1}, ..., x_{n}) \\ 
+.\\ 
+.\\ 
+.\\ 
+\frac{\partial I_{i}}{\partial x_{n}}(x_{1}, ..., x_{n})
+\end{bmatrix}
+\end{gathered}
+\end{equation}
+
+Where $g_{i}(x)$ is the gradient of the $i^{th}$ input scan at voxel location $x$.
+Consequently, the gradient magnitude of each image is defined as:
+
+\begin{equation}
+\label{eq:gradientMagnitude}
+\begin{gathered}
+\left | g_{i}(x) \right | = \left \| \triangledown I_{i}(x) \right \|_{2} = \sqrt{ (\frac{\partial I_{i}}{\partial x_{1}}(x_{1}, ..., x_{n}))^{2} + ... + (\frac{\partial I_{i}}{\partial x_{n}}(x_{1}, ..., x_{n}))^{2} }
+\end{gathered}
+\end{equation}
+
+Then, the edge map of the underlying anatomical structure is inferred from gradient magnitudes of all input multimodal scans:
+
+\begin{equation}
+\label{eq:edgemap}
+\begin{gathered}
+\forall x\in \left\{voxel \quad locations\right\}, \\
+\mu (x) = 
+max_{x}
+\left \{ T_{i}\left [ g_{i}(x) \right ] \right \}
+\end{gathered}
+\end{equation}
+
+Where $T_{i}$ is an image intensity transformation function defined as:
+
+\begin{equation}
+\label{eq:intensityTransformFunc}
+\begin{gathered}
+T_{i}(I) = \begin{cases}
+\alpha_{i} I + b_{i} & \text{ if   } Q_I(50) < I < Q_I(95) \\ 
+M & \text{ if } I > Q_I(95) \\ 
+\epsilon  & \text{ if } I < Q_I(50) 
+\end{cases}
+\end{gathered}
+\end{equation}
+
+Where $Q_I(p)$ is the $p^{th}$ quantile of the input intensity range. 
+$M$ is maximum mapped value. Here we set $M$ to $255$ that is the maximum allowed value for unsigned short.
+Finally $\epsilon > 0$ is the minimum mapped value. Also,
+
+\begin{equation}
+\label{eq:alpha_b}
+\begin{gathered}
+\begin{matrix}
+\alpha_{i} = \frac{M-\epsilon }{Q_{I}(95)-Q_{I}(50)}\\
+\\
+b_{i} = M - \alpha_{i} Q_{I}(95)
+\end{matrix}
+\end{gathered}
+\end{equation}
+
+Figure (\ref{IntensityTransFunc}) shows the intensity transformation function defined above.
+In fact, the designed transform function maps the most strong edges to have the same maximum value and removes all weak edges below the median intensity value.
+
+Then, at each voxel location, the edge value is selected from the modality scan that provides the largest contrast in that location (equation (\ref{eq:edgemap})).
+
+%--------------------------------
+\begin{figure}
+\centering
+\includegraphics[width=3.45in,height=3in]{IntensityTransFunc}\
+\centering
+\caption{Intensity transform function. Strong edges (with values above \%95 percentile) are mapped to a maximum value $M$. Weak edges (with values below \%50 percentile) are mapped to a value $\epsilon > 0$ close to zero. Other edges are mapped linearly to a $\epsilon < value < M$.}
+\label{IntensityTransFunc}
+\end{figure}
+%--------------------------------
+
+Once the edge map is estimated, the spatial weights are defined as:
+
+\begin{equation}
+\label{eq:spatialWeights}
+\begin{gathered}
+W(x) = \frac{1}{\mu (x)}
+\end{gathered}
+\end{equation}
+
+\subsubsection{Experiments and Preliminary Results}
+We present a series of experiments on two-dimensional (2D) image data to demonstrate the superior performance of our SRR method of DWI images compared to standard TV and zero-padded IFFT approaches.
+
+\paragraph{Create two-dimensional test data}
+Initial assessments are run on 2D data. For this purpose, a sample 3D dataset listed in table (\ref{3DSSRTestData}) was selected to create the input 2D test images. This dataset was used as part of the multi-site international PREDICT-HD project.
+
+%--------------------------------
+\begin{table}[ht]
+\centering
+\caption{Test dataset for initial assessments}
+\label{3DSSRTestData}
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+Scan        & Site                                                            & \begin{tabular}[c]{@{}l@{}}MR \\ vendor\end{tabular} & \begin{tabular}[c]{@{}l@{}}Field \\ strength\end{tabular} & \begin{tabular}[c]{@{}l@{}}Collected \\ modalities\end{tabular}                          \\
+\hline \hline
+1166\_54860 & 
+\begin{tabular}[c]{@{}l@{}}Site\_001\\ (Rochester)\end{tabular} & 
+GE Signa HDxt & 
+3.0            & 
+\begin{tabular}
+[c]{@{}l@{}}T1: $1 \times 1 \times 1$ $mm^3$\\ T2: $1 \times 1 \times 1$ $mm^3$\\ DWI: $1 \times 1 \times 2.4$ $mm^3$\end{tabular} \\ 
+\hline
+\end{tabular}
+\end{table}
+%--------------------------------
+
+The input baseline and 2D test images were then created as follows. Note that all inputs are aligned in both physical and voxel spaces.
+
+\begin{itemize}
+\item[ \textbf{}]{
+       \textbf{Baseline 2D DWI image:}
+       First, the $b0$ component and the $1^{st}$ gradient component were extracted from the sample 4D diffusion-weighted dataset listed in table (\ref{3DSSRTestData}).
+       Then, the mid-axial slice of these components were extracted to serve as our high-resolution ground truth images with the size of $256 \times 256$ and isotropic pixel sizes of $1 \times 1$ $mm^2$.
+       }
+\item[ \textbf{}]{
+       \textbf{Low resolution input DWIs:}
+        were created by downsampling the high-resolution baseline images by a factor of $2$ by only keeping the low pass Fourier indices from the high-resolution image.
+        }
+\item[ \textbf{}]{
+       \textbf{Structural MRI input images:}
+        were created by extracting the mid-axial slice from the corresponding T1/T2-weighted images from the same data session.
+        }
+\end{itemize}
+
+\paragraph{Evaluation Metric}
+Output of Weighted-TV algorithm was compared with SRR results from standard TV and zero-padded IFFT approaches.
+For each output, SNR was computed as:
+
+\begin{equation}
+\label{eq:snr}
+\begin{gathered}
+SNR = -20\times Log_{10} \frac{\left \| I_{SR} - I_0 \right \|_{2}}{\left \| I_0 \right \|_{2}}
+\end{gathered}
+\end{equation}
+
+Where $I_{SR}$ is the reconstructed super-resolved DWI image, and $I_0$ is the baseline high-resolution DWI image.
+
+\paragraph{Preliminary 2D results}
+Figure \ref{multimodal_wight_image} shows the T1/T2-weighted images and the estimated anatomical edge map and the created spatial weights based on the method described in section \ref{section:estimateLabelMap}.
+
+%--------------------------------
+\begin{figure}[ht]
+\centering
+\includegraphics[width=2.9in,height=3.75in]{multimodal_weight_image}\
+\centering
+\caption{Created spatial weights based on the anatomical edges estimated from high-resolution structural MR modalities. (a) T1-weighted MR image. (b) T2-weighted MR image. (c) Estimated edge map based on the maximum gradient values as described in section \ref{section:estimateLabelMap}. (d) Prior spatial weights created from estimated edge map based on equation (\ref{eq:spatialWeights}).}
+\label{multimodal_wight_image}
+\end{figure}
+%--------------------------------
+
+Then the prior spatial weights are passed to a weighted-TV algorithm along with low resolution 2D test images.
+Suggested approach is tested on both $b0$ and $1^{st}$ gradient components from a 4D DWI dataset.
+Figure (\ref{b0_SRR}) shows the performance of our weighted-TV super-resolution reconstruction method compared to standard TV and zero-padded IFFT on a low-resolution $b0$ image.
+Figure (\ref{g1_SRR}) shows the same results for the $1^{st}$ gradient component image.
+
+We also provided the reconstruction results using FRI edge map suggest by Jacob and Ongie \cite{ongie2015} demonstrated in figure (\ref{b0_SRR_FRI}). The FRI method performance is also superior to zero-padded IFFT and standard TV algorithms, and its reconstructed output image is comparable to the results of our proposed method.
+
+%--------------------------------
+\begin{figure}[ht]
+\centering
+\includegraphics[width=5in,height=3in]{b0_SRR}\
+\centering
+\caption{Reconstructed b0 component of a typical DWI subject using 3 different methods. The SNR value is provided for the result of each method demonstrated in the first row. The second row shows the difference image between each reconstructed image and the original high-resolution baseline image. The higher SNR value for the proposed weighted-TV approach indicates better reconstruction results.}
+\label{b0_SRR}
+\end{figure}
+%--------------------------------
+
+%--------------------------------
+\begin{figure}[ht]
+\centering
+\includegraphics[width=5in,height=3in]{g1_SRR}\
+\centering
+\caption{Reconstructed first gradient component of a typical DWI subject using 3 different methods. The SNR value is provided for the result of each method demonstrated in the first row. The second row shows the difference image between each reconstructed image and the original high-resolution baseline image. The higher SNR value for the proposed weighted-TV approach indicates better reconstruction results for gradient components as well.}
+\label{g1_SRR}
+\end{figure}
+%--------------------------------
+
+%--------------------------------
+\begin{figure}[ht]
+\centering
+\includegraphics[width=3.5in,height=1.5in]{b0_SRR_FRI}\
+\centering
+\caption{Reconstructed b0 component of a typical DWI subject using FRI edge map suggest in \cite{ongie2015}.}
+\label{b0_SRR_FRI}
+\end{figure}
+%--------------------------------
+
+\subsubsection{Discussion and conclusions}
+The proposed weighted-TV method based on estimated anatomical edges shows superior performance compared to both standard TV and zero-padded IFFT.
+ 
+Also, zero-padded IFFT approach gets better results (25.9 dB) rather than standard TV. The reason can be TV works well for compressed sensing style sampling (when we have sparse samples equally from low and high frequencies), but seems to perform poorly for super-resolution (when higher frequencies are missed). It is specially the case here, since our input real data is a relatively smooth image with no super sharp edges.
+
+The FRI algorithm estimates the anatomical edge map from the input low-resolution image, and unlike our method, it does not need complementary information from other modality scans. However, the proposed approach still has following advantages:
+\begin{itemize}
+\item[-] Using conventional image processing filters makes our method to be easily adoptable for the processing of large-scale multi-site datasets, since there are less parameters needed be adjusted, and it is easier to find an optimal set of parameters working on a set of heterogeneous data.
+\item[-] Proposed method uses fast conventional image processing tools. It accelerates the process time and can be specially important when the implementation is expanded to operate on real 3D datasets.
+\end{itemize}
+
+
+\subsubsection{Future Research Study}
+
+\paragraph{Implementation}
+
+Expand the current super-resolution reconstruction algorithm to operate on physical space on 3D images.
+The implementation is suggested to be performed in ITK, and the implemented framework should be applicable on 4D DWI datasets.
+
+\paragraph{Evaluation}
+The resolution of routine DWI scans is of 2 to 3 mm. The goal is to evaluate the performance of the proposed SSR method on this resolution level. 
+
+Therefore, as a general approach similar to other super-resolution studies \cite{brown2014,shi2015}, first we simulate a group of diffusion-weighted imaging data to have the routine resolution of DWI scans. Then, the recovered results are compared to the ground truth data for quantitative performance evaluation.
+
+\subparagraph{Test Data}
+We use a publicly available dataset from WU-Minn \textbf{Human Connectome Project} (HCP) consortium \cite{van2013,sotiropoulos2013}.
+The HCP designed 3T Siemens Connectome scanner equipped with $100$ $mTm^{-1}$ and $300$ $mTm^{-1}$ gradient coils, that are several times more powerful than standard clinical scanners, and exloited several imaging and image reonstruction innovations to speed up acquisition and improve data quality \cite{sotiropoulos2013}.
+
+The HCP diffusion-weighted imaging data were acquired with a resolution of $1.25 \times 1.25 \times 1.25$ $mm^3$. 
+%High-resolution diffusion-weighted images with resolution of 1.25x1.25x1.25 mm3 were acquired on a 3T Siemens Connectome scanner.
+The original HCP data are used as \textit{baselines}.
+
+To simulate a group of typical-resolution DWI, the original HCP data will be downsampled in Fourier domain by a factor of 2 to obtain DWI with resolution of $2.5 \times 2.5 \times 2.5$ $mm^3$ that is at the similar level of our typical DWI resolution.
+
+\subparagraph{Quantitative Evaluation}
+The experiments will be run on all 20 data subjects from HCP. The signal-to-noise ratio (SNR), defined in equation (\ref{eq:snr}), will be used as the metric to compare each recovered high-resolution image to the original image.
+
+The performance of proposed SRR method will be further compared with other methods:
+\begin{itemize}
+\item[-] Nearest neighbor interpolation
+\item[-] Zero-padded IFFT
+\item[-] Standard total variation (TV)
+\end{itemize}
+
+\subparagraph{Qualitative Evaluation}
+For qualitative performance evaluation, a sample subject will be selected arbitrary from the HCP dataset. Then, we will look at the FA map and the fiber tractography derived from the original image and four reconstruction results.
+
+FA will be estimated from each recovered high-resolution image and will be compared with estimated FA from original image to see which method best preserves white matter properties.
+
+Tracts of interest will be compared between each recovered high-resolution image and the original image:
+\begin{itemize}
+\item[Step 1)] A two-tensor tractography algorithm \cite{Malcolm2010, baumgartner2012} will be run to perform a whole brain tractography.
+
+\item[Step 2)] Cortico-spinal tracts of interest will be extracted using the White Matter Query Language (WMQL), that is a technique to formally describe white matter tracts and to automatically extract them \cite{wassermann2013}.
+This query language allows constructing an anatomical definition for each white matter tract including description of adjacent gray and white matter regions and rules for spatial relations. Therefore, tracts of interest can be extracted from anatomical knowledge of the human brain white matter.
+
+\item[Step 3)] 3DSlicer \cite{slicer_paper} will be used to visually observe that which method best preserves the fiber tracts.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
