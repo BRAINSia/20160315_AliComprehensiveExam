@@ -1,70 +1,70 @@
 
 \section{Introduction}
-\label{Introduction}
+\label{section:Introduction}
 
 This research proposal contributions are two-fold:
-1) novel methods are proposed to enhance multi-spectral tissue classification by incorporating complementary information from multiple modality scans with different spatial resolution.
-Particularly, suggested approach uses low-resolution information acquired from diffusion-weighted imaging (DWI) data to improve the tissue classification previously produced from high resolution structural MR images alone.
-2) we propose a novel method for super-resolution reconstruction of DWI data using the prior anatomical information extracted from other modality sources provided in higher spatial resolution.  Particularly, we incorporate the brain anatomy description provided by high-resolution structural MR (T1/T2-wighted) scans into super-resolution reconstruction of the DWI image subject. The proposed method aims to increase the resolution of the input low-resolution DWI to a high-resolution DWI, e.g., at a factor of 2.
-\newline
+1) novel methods are proposed to enhance multi-spectral tissue classification by incorporating complementary information from multiple modality scans with different spatial resolutions.
+Particularly, suggested approach uses information acquired from low-resolution T2-weighted scans and diffusion-weighted imaging (DWI) data to improve the segmentation previously produced from only high-resolution structural MR images.
+2) we propose a novel method for super-resolution reconstruction of DWI data using the prior anatomical information extracted from other modality sources provided in higher spatial resolution.  Particularly, we incorporate the brain anatomy description that are provided by high-resolution structural MR (T1/T2-wighted) scans into super-resolution reconstruction of the DWI image subject. The proposed method aims to increase the resolution of the input low-resolution DWI to a high-resolution DWI, e.g., at a factor of 2.
+%\newline
 
-\noindent 
-In study of neurodegenerative disorders such as Alzheimer's disease, schizophrenia and Huntington's Disease (HD), usually different modalities are acquired at each scanning session, since each modality scan can reveal some characteristics of the biological architecture. T1-weighted MR is the most used modality; however, it is very hard e.g. to distinguish CSF from bone marrow, and Grey matter from blood vessels by looking only at T1 scan. Using complementary information from T2-weighted modality scan can help here, since it provides better contrast in the case of above-mentioned tissues.
-DWI is another modality that maps water molecule diffusion patterns in biological tissues that can reveal abnormalities in white matter fiber structure and provide models of brain connectivity. Multiple 3D DWI volumes are collected in a single 4D DWI scan, where each 3D volume quantifies diffusion in a different direction. The different sensitizing gradient directions are created by changing the direction of the pulsed gradient fields. In 4D DWI scan, a baseline image or $b0$ image without diffusion weighting is needed to quantify the diffusion in the DWI data. 
-\newline
+This research proposal helps the study of the Huntington's Disease (HD), in PREDICT-HD project \cite{PREDICTHD}, by proposing novel approaches for the segmentation and super-resolution reconstruction (SRR), which help better interpretability of data and increase the sensitivity of the volumetric and diffusion measures used by clinicians to improve the clinical trials that slow down the progression of the disease. Increasing the sensitivity of the measures can also reduce the number of samples needed for longitudinal and cross-sectional analysis that can potentially reduce the cost of future studies. 
 
-\noindent 
+%\noindent 
+In study of neurodegenerative disorders such as Alzheimer's disease, schizophrenia and Huntington's Disease, usually different modalities are acquired at each scanning session, since each modality scan can reveal different characteristics of the underlying biological architecture. T1-weighted MR is the most used modality; however, it is very hard e.g. to distinguish CSF from the bone marrow, and the gray matter from the blood vessels by looking only at T1 scan. Using complementary information from T2-weighted modality scan can help here, since it provides better contrast in the case of above-mentioned tissues.
+DWI is another modality that maps water molecule diffusion patterns in biological tissues that can reveal abnormalities in white matter fiber structure and provide models of brain connectivity. Multiple 3D volumes are collected in a single 4D DWI scan, where each 3D volume quantifies diffusion in a different direction. The different sensitizing gradient directions are created by changing the direction of the pulsed gradient fields. In a 4D DWI scan, a baseline image or $b0$ image without diffusion weighting is also needed to quantify the diffusion in the DWI data. 
+%\newline
+
+%\noindent 
 Diffusion-weighted MR imaging been shown to be sensitive to microscopic degeneration of white matter that is not measurable in structural MRI. Measuring diffusion properties of functional white matter areas in the time course of their degeneration will help us to advance our understanding of neuropathological basis in neurodegenerative diseases.
-However, collected DWI data usually contains too much noise and many artifacts, that avoids them to be efficiently used in standard methods of analysis.
-\newline
+However, collected DWI data usually contain too much noise and many artifacts, that avoids them to be efficiently used in standard methods of analysis.
+%\newline
 
-\noindent 
+%\noindent 
 This research proposal is motivated by the results of a recent study that developed an automated pipeline for the processing of diffusion-weighted imaging (DWI) data in a multi-modal study.
 %\noindent The development of reliable and valid measurements in brain morphology and biological architecture is important in study of subtle differences in neurodegenerative disorders like Alzheimer's disease, schizophrenia and HD. To study these subtle differences, large samples of subjects from many data collection sites must be studied.
 In our previous studies, we have used neuroimaging in python pipelines and interfaces (NIPYPE) \cite{Nipype} to develop an extensible, automated processing pipeline 
 %apply novel cutting-edge methods of \textit{in vivo} diffusion MRI analysis into large-scale multicenter studies. This pipeline provided a reliable tool to non-invasively study alternations in key brain white matter structures for cross-sectional and longitudinal analysis.
-to perform a volumetric analysis on a large scale heterogeneous DWI dataset from the PREDICT-HD database \cite{PREDICTHD}. This DWI pipeline consists of a series of image processing techniques assembled for artifact-correction, alignment, segmentation, compressed sensing, tensor and scalar maps estimation, and statistical measurements. This workflow extended the previous pre-processing steps \cite{Matsui2014} to provide an extensible infrastructure for reliable cross-sectional and longitudinal analysis that allows neuroscientists to measure information about white matter tissues previously inaccessible with standard methods of analysis.
-We investigated the ability of this NIPYPE wrapped pipeline to utilize High Performance Computing (HPC) resources to achieve time-efficient data processing and analysis for large-scale studies. The pipeline outputs provided a validated valuable set of information derived from diffusion-weighted imaging data. Here, first we propose novel methods to use this complementary information to enhance the classification results previously generated from structural MRI data alone. Then, the biology description provided by the structural MRI data in higher spatial resolution will serve as a prior template for guiding  super-resolution reconstruction of the DWI data.
-\newline
+to perform a volumetric analysis on a large scale heterogeneous DWI dataset from the PREDICT-HD database. This DWI pipeline consists of a series of image processing techniques assembled for artifact-correction, alignment, segmentation, compressed sensing, tensor and scalar maps estimation, and statistical measurements. This workflow extended the previous pre-processing steps \cite{Matsui2014} to provide an extensible infrastructure for reliable cross-sectional and longitudinal analysis that allows neuroscientists to measure information about white matter tissues previously inaccessible with standard methods of analysis.
+We investigated the ability of this NIPYPE wrapped pipeline to utilize High Performance Computing (HPC) resources to achieve time-efficient data processing and analysis for large-scale studies. The pipeline outputs provided a validated valuable set of information derived from diffusion-weighted imaging data. Here, first we propose novel methods to use this complementary information to enhance the classification results previously generated from high-resolution structural MRI data alone. Then, the biology description provided by the structural MRI data in higher spatial resolution will serve as a prior template for guiding  super-resolution reconstruction of the DWI data.
+%\newline
 
 \subsection{Aim 1: Enhance multi-spectral tissue classification by incorporating multiple modalities with different spatial resolutions}
 
 The successful implementation of the recently developed DWI pipeline encouraged us to use its valuable output information to improve the segmentation quality for large-scale multi-site longitudinal MR images by incorporating complimentary information acquired from DWI data.
-We should be able to increase the interpretability of our data using more information from multiple modality channels; however, na\"{i}vely adding of information can decrease the interpretability. In this aim, we break down the problem and find the solution.
-\newline
+We should be able to increase the interpretability of our data using more information from multiple modality channels; however, na\"{i}vely adding of information decreases the interpretability. In this aim, we break down the problem and find the solution.
+%\newline
 
 \subsubsection{Subtask 1: Tissue classification of large-scale multi-site heterogeneous MR data using fuzzy k-nearest neighbor method}
 
 This task aims to improve automated classification of brain tissues for multi-center 3D MRI data analysis. 
-Previous studies have developed a robust multi-modal tool for automated registration, bias correction and tissue classification based on expectation maximization (EM) method \cite{Kim2013} that is group specific and uses a \emph{priori} knowledge for all the subjects in an atlas based approach.
+Previous studies have developed a robust multi-modal tool for automated registration, bias-field correction and tissue classification based on expectation maximization (EM) method \cite{Kim2013} that is group specific and uses a \emph{priori} knowledge for all the subjects in an atlas-based approach.
 This task, however, emphasizes the importance of a non-parametric model's utility in neurodegenerative diseases, since each subject has unique anatomical states in longitudinal degenerative studies that may not be represented by prior probability distributions. Enhancements are suggested by augmenting the $EM$-based classification using a fuzzy k-nearest neighbor (k-NN) classifier that builds up a model for each individual subject and complements the classification results that $EM$ produces.
 A Fuzzy $k-NN$ method was selected, as this non-parametric classifier is subject specific; it is not biased by prior probability distributions, and it potentially can model more complex decision boundaries than a Gaussian distribution based mixture method.
-\newline
+%\newline
 
 \subsubsection{Subtask 2: Enhance multi-modal classification when complementary information comes from a second modality with lower spatial resolution}
 
-The second task investigates the partial volume effect (PVE) on multi-modal classification when one modality channel provides information in lower spatial resolution. Partial volume effect complicates the segmentation process, and, due to the complexity of human brain anatomy, the $PVE$ is an important factor for accurate brain structure classification. Therefore, a novel method is proposed to use only those spatial samples that are not affected by partial volume composition, termed as \textit{pure samples}, to train/initialize the classification methods.
-\newline
+The second task investigates the partial volume effect (PVE) on multi-modal classification when one modality channel provides information in lower spatial resolution. Partial volume effect complicates the segmentation process, and, due to the complexity of human brain anatomy, addressing the $PVE$ issue is an important factor for accurate brain structure classification. Therefore, a novel method is proposed to use only those spatial samples that are not affected by partial volume composition, termed as \textit{pure samples}, to train/initialize the classification methods.
+%\newline
 
 \subsubsection{Subtask 3: Extract geometric mean of diffusion images from DWI data, and use these low-resolution information for further enhancement of tissue classification}
 
 Further potential improvements in tissue classification results will be investigated by incorporating the complementary information acquired from diffusion-weighted imaging data into the enhanced classification framework. Here, we suggest to:
 \begin{itemize}
-    \item[-] Extract isotropic diffusion-weighted information (IDWI) from DWI dataset, that is geometric mean of diffusion images.
+    \item[-] Extract isotropic diffusion-weighted information (IDWI) from DWI dataset, that is the geometric mean of all diffusion images.
     \item[-] Incorporate the extracted IDWI image into the segmentation process as a new modality channel.
 \end{itemize}
 
-\noindent 
-Diffusion information provides better contrast between White matter (WM) and Grey matter (GM) tissue regions that is expected to enhance the WM/GM classification.
+%\noindent 
+Diffusion information provides better contrast between white matter (WM) and gray matter (GM) tissue regions that is expected to enhance the WM/GM classification.
 \newline
 
 \subsection{Aim 2: Super-resolution reconstruction of low-resolution diffusion-weighted imaging data using a \emph{priori} knowledge of underlying anatomical structure}
 
-The first aim suggested to use the complementary information derived from DWI data to enhance the segmentation results for the structural MR data.
-The second aim, on the other hand, suggests to use the high-resolution representation of the anatomical structures provided by the structural MR data as a \emph{priori} knowledge to enhance the resolution of diffusion-weighted imaging data.
-%\newline
+The first aim proposed a method to address partial volume effect, so we can use the low-resolution information including the complementary information derived from DWI data to enhance the segmentation results for the structural MR data.
+The second aim, on the other hand, suggests to use the high-resolution representation of the anatomical structures provided by the structural MR data as a \emph{priori} knowledge to enhance the resolution of diffusion-weighted imaging data. In fact, reconstruction of high-resolution images may also benefit reducing the partial volume effects.
 
-%\noindent 
-The use of diffusion-weighted imaging data is strongly limited by its relatively low spatial resolution. The resolution of current typical DWI data is $2 \times 2 \times 2$  $mm^3$, that means its voxel is $8$ times larger than that in structural MRI.
-The goal is to increase the spatial resolution of an input DWI scan to the same higher resolution isotropic ($1\times1\times1$ $mm^3$) voxel lattice as its corresponding structural MR images. Using basic interpolation techniques to resample the input DWI data to a higher resolution voxel space introduces no new information into the input images useful for further medical imaging applications. This aim investigates the use of edge information from the high resolution structural MRI data to achieve a super-resolution reconstruction of DWI scans, where the voxel values at tissue boundaries will be in agreement with  anatomical definitions of the morphological scan data.
+The use of diffusion-weighted imaging data is strongly limited by its relatively low spatial resolution. The resolution of a typical DWI data is $2 \times 2 \times 2$  $mm^3$, that means its voxel size is $8$ times larger than that in structural MRI.
+The goal is to increase the spatial resolution of an input DWI scan to a high resolution isotropic ($1$ $mm^3$) voxel space similar to its corresponding structural MR images. However, using only basic interpolation techniques to resample the input DWI data to a higher resolution lattice space introduces no new information into the input image that can help further medical imaging applications. This aim investigates the use of tissue boundaries information from the high-resolution structural MRI data to achieve a super-resolution reconstruction of DWI scans, where the voxel values at tissue boundaries will be in more agreement with the actual anatomical definitions of the morphological data.
 \newline

@@ -716,16 +716,6 @@ year = {2004}
   month={},
   publisher={Kitware, Inc.}
 }
-
-@ARTICLE{slicer_paper,
-	author		 = {A. Fedorov and R. Beichel and J. Kalpathy-Cramer and J. Finet and J-C. Fillion-Robin and S. Pujol and C. Bauer and D. Jennings and F. Fennessy and M. Sonka and J. Buatti and S. R. Aylward and j. V. Miller and S. Pieper and R. Kikinis},
-	title		 = {{3D} Slicer as an Image Computing Platform for the Quantitative Imaging Network},
-	journal		 = {Magnetic Resonance Imaging},
-	year		 = {2012},
-	volume		 = {30},
-	number		 = {9},
-	pages		 = {1323--1341},
-}
   
 @misc{Avantsa,
   author = {Avants, Brian B and Tustison, Nicholas J and Johnson, Hans J},
@@ -763,24 +753,41 @@ year = {2014}
 }
 
 @article{Pierson2011,
-abstract = {The BRAINS (Brain Research: Analysis of Images, Networks, and Systems) image analysis software has been in use, and in constant development, for over 20. years. The original neuroimage analysis pipeline using BRAINS was designed as a semiautomated procedure to measure volumes of the cerebral lobes and subcortical structures, requiring manual intervention at several stages in the process. Through use of advanced image processing algorithms the need for manual intervention at stages of image realignment, tissue sampling, and mask editing have been eliminated. In addition, inhomogeneity correction, intensity normalization, and mask cleaning routines have been added to improve the accuracy and consistency of the results. The fully automated method, AutoWorkup, is shown in this study to be more reliable (ICC ??? 0.96, Jaccard index ??? 0.80, and Dice index ??? 0.89 for all tissues in all regions) than the average of 18 manual raters. On a set of 1130 good quality scans, the failure rate for correct realignment was 1.1{\%}, and manual editing of the brain mask was required on 4{\%} of the scans. In other tests, AutoWorkup is shown to produce measures that are reliable for data acquired across scanners, scanner vendors, and across sequences. Application of AutoWorkup for the analysis of data from the 32-site, multivendor PREDICT-HD study yield estimates of reliability to be greater than or equal to 0.90 for all tissues and regions. ?? 2010 Elsevier Inc.},
-author = {Pierson, Ronald K. and Johnson, Hans J. and Harris, Gregory and Keefe, Helen and Paulsen, Jane S. and Andreasen, Nancy C. and Magnotta, Vincent a.},
-doi = {10.1016/j.neuroimage.2010.06.047},
-file = {:IPLlinux/raid0/homes/johnsonhj/Documents/Mendeley Desktop/Pierson et al/NeuroImage/Pierson et al. - 2011 - NeuroImage Fully automated analysis using BRAINS AutoWorkup.pdf:pdf},
-isbn = {1095-9572 (Electronic)$\backslash$n1053-8119 (Linking)},
-issn = {10538119},
-journal = {NeuroImage},
-keywords = {Automated image analysis,BRAINS,Morphometry,Pipeline,Segmentation,Volumetric analysis},
-mendeley-groups = {AllHans,ReginaThesis,AutoSegmentation,JoysThesis,TEMP{\_}HOWES{\_}RE},
-month = {},
-number = {1},
-pages = {328--336},
-pmid = {20600977},
-publisher = {Elsevier Inc.},
-title = {{Fully automated analysis using BRAINS: AutoWorkup}},
-url = {http://www.sciencedirect.com/science/article/pii/S1053811910009055 papers2://publication/uuid/35F9A8B8-DD4A-4857-903F-16D3F7CCAEF7 http://www.ncbi.nlm.nih.gov/pubmed/20600977},
-volume = {54},
-year = {2011}
+    author = {Pierson, Ronald K. and Johnson, Hans J. and Harris, Gregory and Keefe, Helen and Paulsen, Jane S. and Andreasen, Nancy C. and Magnotta, Vincent a.},
+    doi = {10.1016/j.neuroimage.2010.06.047},
+    isbn = {1095-9572 (Electronic)$\backslash$n1053-8119 (Linking)},
+    issn = {10538119},
+    journal = {NeuroImage},
+    month = {},
+    number = {1},
+    pages = {328--336},
+    pmid = {20600977},
+    publisher = {Elsevier Inc.},
+    title = {{Fully automated analysis using BRAINS: AutoWorkup}},
+    url = {http://www.sciencedirect.com/science/article/pii/S1053811910009055 papers2://publication/uuid/35F9A8B8-DD4A-4857-903F-16D3F7CCAEF7 http://www.ncbi.nlm.nih.gov/pubmed/20600977},
+    volume = {54},
+    year = {2011}
+}
+
+@article{canny1986,
+  title={A computational approach to edge detection},
+  author={Canny, John},
+  journal={Pattern Analysis and Machine Intelligence, IEEE Transactions on},
+  volume={6},
+  pages={679--698},
+  year={1986},
+  publisher={IEEE}
+}
+
+@article{filzmoser2004,
+  title={A multivariate outlier detection method},
+  author={Filzmoser, Peter},
+  journal={in Proceedings of the Seventh International
+Conference on Computer Data Analysis and Modeling},
+  volume={1},
+  pages={18--22},
+  year={2004},
+  publisher={}
 }
 
 
@@ -791,15 +798,14 @@ year = {2011}
   title={On the stability of inverse problems},
   author={Tikhonov, Andrey Nikolayevich},
   booktitle={Dokl. Akad. Nauk SSSR},
-  volume={39},
-  number={5},
+  volume={39, No. 5},
   pages={195--198},
   year={1943}
 }
 
 @book{tikhonov1977solutions,
   title={Solutions of ill-posed problems},
-  author={Tikhonov, Andre{\u\i}} Nikolaevich and Arsenin, Vasili{\u\i}} I︠A︡kovlevich},
+  author={Tikhonov, Andre{\u\i} Nikolaevich and Arsenin, Vasili{\u\i} I︠A︡kovlevich},
   year={1977},
   publisher={Vh Winston}
 }
@@ -999,4 +1005,35 @@ year = {2010}
   pages={125--143},
   year={2013},
   publisher={Elsevier}
+}
+
+% TV
+@article{marquina2008,
+  title={Image super-resolution by TV-regularization and Bregman iteration},
+  author={Marquina, Antonio and Osher, Stanley J},
+  journal={Journal of Scientific Computing},
+  volume={37},
+  number={3},
+  pages={367--382},
+  year={2008},
+  publisher={Springer}
+}
+
+@article{zhu2008,
+  title={An efficient primal-dual hybrid gradient algorithm for total variation image restoration},
+  author={Zhu, Mingqiang and Chan, Tony},
+  journal={UCLA CAM Report},
+  pages={08--34},
+  year={2008}
+}
+
+@article{chambolle2011,
+  title={A first-order primal-dual algorithm for convex problems with applications to imaging},
+  author={Chambolle, Antonin and Pock, Thomas},
+  journal={Journal of Mathematical Imaging and Vision},
+  volume={40},
+  number={1},
+  pages={120--145},
+  year={2011},
+  publisher={Springer}
 }

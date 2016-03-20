@@ -63,3 +63,90 @@ Accomplishment of enhanced classification methods in Aim 2 will provide better c
 The goal is to increase the spatial resolution of DWI scans to a higher resolution isotropic ($1\times1\times1$ $mm^3$) voxel lattice. However, using basic interpolation techniques to resample the input DWI data to a higher resolution voxel space introduces no new information into the input images useful for further medical imaging applications. This study investigates the use of boundary information from isotropic $1\times1\times1$ $mm^3$ posterior tissue probability maps to achieve a super-resolution reconstruction of DWI scans, where the voxel values at tissue boundaries are in agreement with true anatomical definitions in the output image.
 \newline
 %\subsection{Aim 4: Consistent registration of DWI scans using a multimodal registration framework}
+
+
+
+
+
+
+
+
+%========================
+%pure plugs approach
+%========================
+
+\paragraph{Approach} %--------------------------------
+
+Classification accuracy can be improved by excluding the voxels affected by partial volume composition, termed as \textit{mixed samples}, from the initialization of the $EM$ algorithm and the training of the $KNN$ classifier.
+In this section, we propose to identify the pure samples by computing a binary mask, called \textbf{pure plugs mask}, that excludes all the mixed samples from the initialization/training of the classification methods.
+
+\subparagraph{What is a pure plug?}
+\label{section:purePlugDef}
+
+A \textit{pure plug} is defined as a region (plug), where all multi-modal images have consistent information within the entire range of that region. The size of each plug region is then decided based on the lowest spatial resolution at each direction within all input modality scans.
+
+\subparagraph{Computing a pure plugs mask}
+
+To compute a pure plugs mask, we should avoid both inherent PVE at tissue boundaries and the PVE caused by information inconsistency through multiple modality channels.
+Following steps are proposed to compute a pure plugs mask:
+
+\begin{itemize}
+\item[ \textbf{1)}]{
+       \textbf{Create an empty mask:}
+       An empty mask is created to have the lowest spatial resolution at each direction between all input multi-modal scans. All the voxel values are then set to $1$ as a default.
+       }
+\item[ \textbf{2)}]{
+       \textbf{Avoid inherent PVE:}
+        All the voxels located in tissue boundaries may include a mixture of both tissue regions, since biology cannot conform in the resolution levels that scanners produce. This inherent partial volume effect is avoided by excluding all tissue boundaries from the pure plugs mask. For this purpose, edges are detected from the input modality with the finest resolution using a Canny edge detector as shown by Figure (\ref{fig:canny_edge_mask}) and are excluded from the default mask created in step (1).
+        
+%--------------------------------
+\begin{figure}
+\centering
+\includegraphics[width=5.5in,height=2in]{canny_edge_mask}\
+\centering
+\caption{Anatomical tissue boundaries are detected using a Canny edge detector. Detected edges should be excluded from the pure plugs mask to avoid inherent PVE in tissue boundaries.} 
+\label{fig:canny_edge_mask}
+\end{figure}
+%--------------------------------
+        }
+\item[ \textbf{3)}]{
+       \textbf{Avoid multi-modal PVE:}
+        As demonstrated by Figure (\ref{fig:pve}), partial  volume  composition  affects  a  larger  number  of  spatial  samples  when  the  multi-modal  information comes from the modality scans with different voxel resolutions. To prevent this adversely affects the classification process, we need to include only those samples that are placed within a pure plug. Therefore, we need to iterate through the mask created in step (1) and decide whether each plug is pure or not based on the provided definition in section \ref{section:purePlugDef}. However, this raises an immediate question: how do we define the consistency of multi-modal information within a plug region? This is discussed in following section by defining the \textit{pure plugs integrity metric}.
+        }
+\end{itemize}
+
+\subparagraph{Pure plugs integrity metric}
+
+% minimum distance error to compare how each tract shape is similar to the HR tract.
+% it monotonically increases when the shapes gets more dissimilar
+\begin{equation}
+\label{eq:minDist}
+\begin{gathered}
+\sum_{p\in T_{HR}} \left \| p - \min_{q}(\left \| p-q \right \|) \right \|^2
+\end{gathered}
+\end{equation}
+
+% next metric, computing the average of FA inside the important anatomical regions. We can use the cortico-spinal as an region of interest
+% for method i
+
+\begin{equation}
+\label{eq:minDist}
+\begin{gathered}
+\frac{1}{N_p}\sum_{p\in P_{HR}} FA_i(p)
+\end{gathered}
+\end{equation}
+
+% How to use HD data to show improvement of sensitivity for neurological disease
+
+% inside the pure plug regions we expect that the average of FA be the same before and after SRR
+
+% within the regions outside of pure plugs we expect the results be different.
+
+% here we do not need baselines
+% pure plugs value is the gold standard here
+
+% within one region, the FA value computed within the pure plugs is different than the FA value is within the not pure plugs in LR image
+
+% in HR those values should be close together.
+
+
